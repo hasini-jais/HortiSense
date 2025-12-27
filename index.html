@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HortiSense Farm Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;600;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #2d5016;
+            --primary-light: #4a7c2a;
+            --secondary: #c17817;
+            --bg-main: #faf8f3;
+            --bg-card: #ffffff;
+            --text-primary: #1a2b10;
+            --text-secondary: #5a6b50;
+            --border: #d4d9ce;
+            --success: #3d7c2f;
+            --warning: #d97706;
+            --critical: #b91c1c;
+            --optimal: #059669;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 900;
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 0.1rem;
+            letter-spacing: -0.03em;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+        
+        .tagline {
+            margin-bottom: 2rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--secondary);
+        }
+
+        .setup-section {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(45, 80, 22, 0.05);
+        }
+
+        .setup-header {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.75rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+            background: var(--bg-main);
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 80, 22, 0.2);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            margin-left: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: #d98825;
+        }
+
+        .zones-container {
+            display: none;
+        }
+
+        .zone-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .zone-card.critical {
+            border-color: var(--critical);
+            box-shadow: 0 4px 16px rgba(185, 28, 28, 0.1);
+        }
+
+        .zone-card.warning {
+            border-color: var(--warning);
+            box-shadow: 0 4px 16px rgba(217, 119, 6, 0.1);
+        }
+
+        .zone-card.optimal {
+            border-color: var(--optimal);
+            box-shadow: 0 4px 16px rgba(5, 150, 105, 0.1);
+        }
+
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .zone-title {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .priority-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .priority-critical {
+            background: var(--critical);
+            color: white;
+        }
+
+        .priority-high {
+            background: var(--warning);
+            color: white;
+        }
+
+        .priority-medium {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .priority-low {
+            background: var(--optimal);
+            color: white;
+        }
+
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .param-input {
+            position: relative;
+        }
+
+        .param-status {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.25rem;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 3rem;
+        }
+
+        .results-header {
+            font-family: 'Fraunces', serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Fraunces', serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .diagnosis-section {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .diagnosis-header {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .issue-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .issue-item {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .issue-item strong {
+            color: var(--text-primary);
+        }
+
+        .issue-item em {
+            color: var(--text-primary);
+            opacity: 0.9;
+        }
+
+        .issue-critical {
+            background: rgba(185, 28, 28, 0.1);
+            border-left: 4px solid var(--critical);
+        }
+
+        .issue-warning {
+            background: rgba(217, 119, 6, 0.1);
+            border-left: 4px solid var(--warning);
+        }
+
+        .issue-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .solutions-section {
+            background: rgba(45, 80, 22, 0.03);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .solutions-header {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.95rem;
+        }
+
+        .solution-item {
+            background: white;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-light);
+        }
+
+        .solution-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .solution-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .solution-description {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            opacity: 0.85;
+        }
+
+        .no-issues {
+            text-align: center;
+            padding: 2rem;
+            color: var(--optimal);
+            font-size: 1.125rem;
+        }
+
+        .no-issues::before {
+            content: "✓";
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .zone-card,
+        .diagnosis-section {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 10px;
+            }
+            
+            .setup-section,
+            .zones-container button,
+            .btn {
+                display: none !important;
+            }
+            
+            .results-section {
+                display: block !important;
+            }
+            
+            .diagnosis-section {
+                page-break-inside: avoid;
+                border: 1px solid #333;
+                margin-bottom: 20px;
+            }
+            
+            .zone-card {
+                page-break-inside: avoid;
+                border: 1px solid #333;
+            }
+            
+            /* Ensure all text is black and crisp */
+            * {
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            h1, h2, h3, h4, h5, h6, p, div, span, li, label, input, select {
+                color: #000000 !important;
+                opacity: 1 !important;
+            }
+            
+            /* Keep background colors for visual context */
+            .issue-critical {
+                background: rgba(185, 28, 28, 0.1) !important;
+                border-left: 4px solid #b91c1c !important;
+            }
+            
+            .issue-warning {
+                background: rgba(217, 119, 6, 0.1) !important;
+                border-left: 4px solid #d97706 !important;
+            }
+            
+            .stat-card,
+            .zone-card,
+            .diagnosis-section,
+            .solution-item {
+                background: white !important;
+                border: 1px solid #d4d9ce !important;
+            }
+            
+            .priority-badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HortiSense Farm Advisor</h1>
+        <p class="subtitle tagline" style="font-style: italic; text-align: center; margin-top: 0;">Smart insights for every plant zone</p>
+        <p class="subtitle" style="margin-top: 0; font-size: 0.95rem;">Provide plant diagnostics using probe sensor data for zone-based health analysis and solution recommendations</p>
+
+        <!-- Setup Section -->
+        <div class="setup-section">
+            <h2 class="setup-header">Farm Configuration</h2>
+            <div class="input-group">
+                <label for="numZones">Number of Zones in Your Farm</label>
+                <input type="number" id="numZones" min="1" max="20" value="3" placeholder="Enter number of zones">
+            </div>
+            <button class="btn" onclick="generateZones()">Generate Zone Forms</button>
+            <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+        </div>
+
+        <!-- Zones Container -->
+        <div class="zones-container" id="zonesContainer"></div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 class="results-header" style="margin-bottom: 0;">📊 Diagnostic Results</h2>
+                <button class="btn btn-secondary" onclick="downloadPDF()">🖨️ Print / Save as PDF</button>
+            </div>
+            <div class="summary-stats" id="summaryStats"></div>
+            <div id="diagnosisResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Plant data with optimal ranges
+        const plantData = {
+            'Mango': {
+                humidity: { min: 50, max: 60, unit: '%' },
+                ph: { min: 5.5, max: 7.5, unit: '' },
+                light: { min: 40000, max: 100000, unit: ' lux' },
+                temperature: { min: 24, max: 30, unit: '°C' },
+                icon: '🥭'
+            },
+            'Palm Oil': {
+                humidity: { min: 70, max: 85, unit: '%' },
+                ph: { min: 4, max: 6, unit: '' },
+                light: { min: 60000, max: 100000, unit: ' lux' },
+                temperature: { min: 25, max: 32, unit: '°C' },
+                icon: '🌴'
+            },
+            'Orange': {
+                humidity: { min: 50, max: 70, unit: '%' },
+                ph: { min: 6, max: 7.5, unit: '' },
+                light: { min: 35000, max: 60000, unit: ' lux' },
+                temperature: { min: 20, max: 30, unit: '°C' },
+                icon: '🍊'
+            },
+            'Tamarind': {
+                humidity: { min: 40, max: 60, unit: '%' },
+                ph: { min: 5.5, max: 6.7, unit: '' },
+                light: { min: 40000, max: 80000, unit: ' lux' },
+                temperature: { min: 25, max: 35, unit: '°C' },
+                icon: '🌳'
+            },
+            'Pomegranate': {
+                humidity: { min: 40, max: 60, unit: '%' },
+                ph: { min: 5.5, max: 7, unit: '' },
+                light: { min: 30000, max: 50000, unit: ' lux' },
+                temperature: { min: 20, max: 35, unit: '°C' },
+                icon: '🍎'
+            },
+            'Roses': {
+                humidity: { min: 50, max: 60, unit: '%' },
+                ph: { min: 6, max: 6.5, unit: '' },
+                light: { min: 20000, max: 70000, unit: ' lux' },
+                temperature: { min: 15, max: 28, unit: '°C' },
+                icon: '🌹'
+            }
+        };
+
+        // Symptoms and solutions database
+        const symptomsAndSolutions = {
+            'Mango': {
+                humidity: {
+                    low: {
+                        threshold: 30,
+                        symptoms: 'Dry leaf edges, shriveled shoots',
+                        solutions: [
+                            { title: 'Misting', desc: 'Apply misting for saplings and young mango trees (avoid on mature trees to prevent fungal infection)' },
+                            { title: 'Mulching', desc: 'Apply coarse-chip mulch (5-8cm depth) to increase moisture retention' },
+                            { title: 'Deep Watering', desc: 'Deep-water the tree 2-3 times per week' },
+                            { title: 'Microsprinklers', desc: 'Install microsprinklers for consistent misting' }
+                        ]
+                    },
+                    high: {
+                        threshold: 80,
+                        symptoms: 'Black spots (anthracnose fungal disease)',
+                        solutions: [
+                            { title: 'Canopy Pruning', desc: 'Prune canopy branches to increase airflow and prevent fungal growth' },
+                            { title: 'Watering Method', desc: 'Avoid watering overhead; switch to drip irrigation' },
+                            { title: 'Fungicide Application', desc: 'Apply copper fungicide to prevent anthracnose' }
+                        ]
+                    }
+                },
+                ph: {
+                    low: {
+                        threshold: 5.5,
+                        symptoms: 'Yellowing leaves, less flowering',
+                        solutions: [
+                            { title: 'Lime Application', desc: 'Spread lime over soil (calcitic if Mg normal, dolomitic if Mg deficiency)' },
+                            { title: 'Neutral Compost', desc: 'Use compost with neutral pH to help neutralize acidity' },
+                            { title: 'Reduce Watering', desc: 'Water less frequently if soil is acidic (holds moisture too long)' }
+                        ]
+                    },
+                    high: {
+                        threshold: 7.5,
+                        symptoms: 'Pale fronds',
+                        solutions: [
+                            { title: 'Sulfur Addition', desc: 'Add sulfur (prills or powder) to lower pH' },
+                            { title: 'Compost Application', desc: 'Use compost - microorganisms produce organic acids that lower pH' },
+                            { title: 'Acidic Materials', desc: 'Add coffee grounds or citrus peels to directly lower pH' },
+                            { title: 'Fertilizer Adjustment', desc: 'Use fertilizers low in nitrogen to improve fruit quality' }
+                        ]
+                    }
+                },
+                light: {
+                    low: {
+                        threshold: 30000,
+                        symptoms: 'Thin and stretched fronds',
+                        solutions: [
+                            { title: 'Canopy Thinning', desc: 'Lightly prune/thin branches from upper canopy to increase exposure' },
+                            { title: 'Remove Shade', desc: 'Remove nearby plants blocking sunlight' },
+                            { title: 'Sunlight Hours', desc: 'Ensure 6+ hours of direct sunlight daily' },
+                            { title: 'Reflective Mats', desc: 'Install reflective mats to redirect sunlight to shaded areas' }
+                        ]
+                    },
+                    high: {
+                        threshold: 100000,
+                        symptoms: 'Bleached fronds',
+                        solutions: [
+                            { title: 'Increased Watering', desc: 'Increase mid-day watering and mulch roots to cool soil' },
+                            { title: 'Shade Nets', desc: 'Use 30-40% shade nets during heat waves' },
+                            { title: 'Trunk Protection', desc: 'Apply whitewash to tree trunk to prevent bark cracking' }
+                        ]
+                    }
+                },
+                temperature: {
+                    low: {
+                        threshold: 15,
+                        symptoms: 'Yellowing leaves',
+                        solutions: [
+                            { title: 'Root Insulation', desc: 'Mulch to insulate roots (mango roots are sensitive to cold)' },
+                            { title: 'Tree Wraps', desc: 'Use tree wraps or burlap insulation around trunk' },
+                            { title: 'Reduce Watering', desc: 'Reduce watering since cold slows root absorption' },
+                            { title: 'Frost Protection', desc: 'Cover canopy with frost cloth during cold periods' }
+                        ]
+                    },
+                    high: {
+                        threshold: 40,
+                        symptoms: 'Yellowing and halted growth',
+                        solutions: [
+                            { title: 'Shade Nets', desc: 'Use shade nets to reduce leaf scorch' },
+                            { title: 'Morning Watering', desc: 'Deep-water in the mornings' },
+                            { title: 'Heavy Mulching', desc: 'Heavily mulch to cool the roots' },
+                            { title: 'Afternoon Misting', desc: 'Lightly mist leaves in late afternoon (not midday)' }
+                        ]
+                    }
+                }
+            },
+            'Palm Oil': {
+                humidity: {
+                    low: {
+                        threshold: 50,
+                        symptoms: 'Browning of fronds at tips, slow trunk growth',
+                        solutions: [
+                            { title: 'Mist Foggers', desc: 'Use tropical mist foggers to increase humidity' },
+                            { title: 'Drip Irrigation', desc: 'Install drip irrigation systems' },
+                            { title: 'Coconut Husk Mulch', desc: 'Mulch around trunk with coconut husk (retains moisture)' },
+                            { title: 'Increase Watering', desc: 'Increase watering cycles in dry seasons' }
+                        ]
+                    },
+                    high: {
+                        threshold: 90,
+                        symptoms: 'Fungal patches on trunk or leaves',
+                        solutions: [
+                            { title: 'Tree Spacing', desc: 'Increase spacing between trees to improve airflow' },
+                            { title: 'Anti-fungal Treatment', desc: 'Apply fosetyl-Al drench to prevent basal stem rot' },
+                            { title: 'Improve Drainage', desc: 'Improve drainage throughout the plantation' }
+                        ]
+                    }
+                },
+                ph: {
+                    low: {
+                        threshold: 4.5,
+                        symptoms: 'Root burn',
+                        solutions: [
+                            { title: 'Dolomite Lime', desc: 'Add dolomite lime to raise pH' },
+                            { title: 'Alkaline Compost', desc: 'Mix compost with alkaline materials like composted palm residues' },
+                            { title: 'Fertilizer Adjustment', desc: 'Reduce use of acidic fertilizers like urea and ammonium' }
+                        ]
+                    },
+                    high: {
+                        threshold: 7,
+                        symptoms: 'Pale fronds',
+                        solutions: [
+                            { title: 'Elemental Sulfur', desc: 'Add elemental sulfur (prills or powder)' },
+                            { title: 'Ammonium Sulfate', desc: 'Use ammonium sulfate fertilizer' },
+                            { title: 'Organic Mulch', desc: 'Use organic mulch to acidify soil' },
+                            { title: 'Peat Moss', desc: 'Mix peat moss around roots to increase nutrient availability' }
+                        ]
+                    }
+                },
+                light: {
+                    low: {
+                        threshold: 40000,
+                        symptoms: 'Thin and stretched fronds',
+                        solutions: [
+                            { title: 'Remove Shade', desc: 'Remove any nearby shade trees' },
+                            { title: 'Proper Spacing', desc: 'Ensure proper spacing between trees (9-10m)' },
+                            { title: 'Open Positioning', desc: 'Position younger palms in open areas' }
+                        ]
+                    },
+                    high: {
+                        threshold: 100000,
+                        symptoms: 'Bleached young fronds',
+                        solutions: [
+                            { title: 'Temporary Shade', desc: 'Temporarily shade young palms during extreme sun' },
+                            { title: 'Increase Watering', desc: 'Increase watering to prevent frond burning and leaf desiccation' },
+                            { title: 'Coconut Mulch', desc: 'Use coconut mulch to prevent soil drying and cool soil' }
+                        ]
+                    }
+                },
+                temperature: {
+                    low: {
+                        threshold: 20,
+                        symptoms: 'Yellowing and halted growth',
+                        solutions: [
+                            { title: 'Reduce Watering', desc: 'Water less frequently so roots don\'t sit wet and cold' },
+                            { title: 'Black Mulch', desc: 'Use black mulch to absorb more sunlight and warm soil' },
+                            { title: 'Windbreak Barriers', desc: 'Use windbreak barriers to reduce wind chill near palms' }
+                        ]
+                    },
+                    high: {
+                        threshold: 34,
+                        symptoms: 'Drying of fronds',
+                        solutions: [
+                            { title: 'Drip Systems', desc: 'Use drip systems providing 150-200+ liters daily for mature palms' },
+                            { title: 'Thick Mulch', desc: 'Use thick organic mulch to retain moisture and reduce soil temperature' },
+                            { title: 'Cover Crops', desc: 'Use cover crops like legumes to cool soil and reduce water loss' }
+                        ]
+                    }
+                }
+            },
+            'Orange': {
+                humidity: {
+                    low: {
+                        threshold: 40,
+                        symptoms: 'Curling of leaves, premature fruit falling',
+                        solutions: [
+                            { title: 'Deep Watering', desc: 'Deep-water roots weekly to prevent fruit cracking' },
+                            { title: 'Bark Mulch', desc: 'Use shredded bark mulch to retain moisture' },
+                            { title: 'Morning Misting', desc: 'Use morning misting systems' }
+                        ]
+                    },
+                    high: {
+                        threshold: 85,
+                        symptoms: 'Fungal spots on leaves',
+                        solutions: [
+                            { title: 'Prune for Airflow', desc: 'Prune interior branches to increase airflow' },
+                            { title: 'Drip Irrigation', desc: 'Use drip irrigation rather than overhead watering' },
+                            { title: 'Copper Fungicide', desc: 'Apply copper fungicide to prevent cankers and anthracnose' }
+                        ]
+                    }
+                },
+                ph: {
+                    low: {
+                        threshold: 6,
+                        symptoms: 'Dark green leaf veins with yellow edges (magnesium deficiency)',
+                        solutions: [
+                            { title: 'Garden Lime', desc: 'Add garden lime to increase nutrient intake' },
+                            { title: 'Leaf Mold Compost', desc: 'Use composted leaf mold to buffer acidic soil' },
+                            { title: 'Reduce Ammonium', desc: 'Reduce usage of ammonium fertilizers' }
+                        ]
+                    },
+                    high: {
+                        threshold: 7.5,
+                        symptoms: 'Yellow leaves with green veins (iron deficiency/chlorosis)',
+                        solutions: [
+                            { title: 'Incremental Sulfur', desc: 'Add sulfur incrementally to reduce alkalinity' },
+                            { title: 'Chelated Iron', desc: 'Apply chelated iron treatments to reduce chlorosis' },
+                            { title: 'Pine-bark Mulch', desc: 'Use pine-bark mulch (acidic) around feeder roots' }
+                        ]
+                    }
+                },
+                light: {
+                    low: {
+                        threshold: 30000,
+                        symptoms: 'Pale leaves and sour fruits',
+                        solutions: [
+                            { title: 'Remove Shade', desc: 'Remove any nearby shade trees' },
+                            { title: 'Canopy Lifting', desc: 'Prune lower branches to allow sunlight to reach deeper branches' }
+                        ]
+                    },
+                    high: {
+                        threshold: 90000,
+                        symptoms: 'Brown patches on fruit (sunburn)',
+                        solutions: [
+                            { title: 'Shade Cloth', desc: 'Use 20% shade cloth to prevent direct sunburn damage' },
+                            { title: 'Morning Watering', desc: 'Deeply water in the mornings' },
+                            { title: 'Canopy Coverage', desc: 'Ensure partial canopy coverage to protect inner fruit' }
+                        ]
+                    }
+                },
+                temperature: {
+                    low: {
+                        threshold: 12,
+                        symptoms: 'Fruit and flower drop',
+                        solutions: [
+                            { title: 'Trunk Insulation', desc: 'Wrap tree trunk with insulating foam' },
+                            { title: 'Reduce Watering', desc: 'Significantly reduce watering (cold roots won\'t absorb moisture)' },
+                            { title: 'Frost Cloth', desc: 'Cover tree with frost cloth at night to retain warmth' }
+                        ]
+                    },
+                    high: {
+                        threshold: 38,
+                        symptoms: 'Wilting of leaves mid-day',
+                        solutions: [
+                            { title: 'Angled Panels', desc: 'Use angled panels to block excessive afternoon radiation' },
+                            { title: 'Increase Watering', desc: 'Increase watering volume' },
+                            { title: 'Morning Misting', desc: 'Lightly mist leaves in early morning to lower canopy temperature' }
+                        ]
+                    }
+                }
+            },
+            'Tamarind': {
+                humidity: {
+                    low: {
+                        threshold: 30,
+                        symptoms: 'Minimal symptoms in mature trees (highly drought-tolerant)',
+                        solutions: [
+                            { title: 'Weekly Watering', desc: 'Deep-water weekly for young tamarind (drought-sensitive roots)' },
+                            { title: 'Wood-chip Mulch', desc: 'Use coarse wood-chip mulch in arid climates' },
+                            { title: 'Low-output Misters', desc: 'Install low-output misters around younger tamarind' }
+                        ]
+                    },
+                    high: {
+                        threshold: 70,
+                        symptoms: 'Fungal spots on leaves',
+                        solutions: [
+                            { title: 'Extensive Pruning', desc: 'Extensively prune dense branches to improve airflow' },
+                            { title: 'Gravel Drainage', desc: 'Use gravel layers around tree base to improve drainage' },
+                            { title: 'Evening Watering', desc: 'Don\'t water in evenings (low evaporation encourages fungus)' }
+                        ]
+                    }
+                },
+                ph: {
+                    low: {
+                        threshold: 4.5,
+                        symptoms: 'Slow pod development',
+                        solutions: [
+                            { title: 'Agricultural Lime', desc: 'Use agricultural lime along root area' },
+                            { title: 'Neutral Compost', desc: 'Mix neutral compost to buffer acidity' },
+                            { title: 'Reduce Sulphates', desc: 'Reduce usage of sulphate fertilizers that increase acidity' }
+                        ]
+                    },
+                    high: {
+                        threshold: 8,
+                        symptoms: 'Pale leaves',
+                        solutions: [
+                            { title: 'Sulfur Prills', desc: 'Use elemental sulfur prills or powder' },
+                            { title: 'Peat Moss', desc: 'Add peat moss around roots to naturally increase acidity' },
+                            { title: 'Foliar Sprays', desc: 'Apply micronutrient foliar sprays to correct pH-caused deficiencies' }
+                        ]
+                    }
+                },
+                light: {
+                    low: {
+                        threshold: 35000,
+                        symptoms: 'Fewer pods and less canopy spread',
+                        solutions: [
+                            { title: 'Prune Upper Branches', desc: 'Thin or prune upper branches for more sunlight' },
+                            { title: 'Daily Sunlight', desc: 'Ensure 8-10 hours of direct sunlight daily' },
+                            { title: 'Remove Vegetation', desc: 'Remove shading vegetation nearby' }
+                        ]
+                    },
+                    high: {
+                        threshold: 100000,
+                        symptoms: 'Leaf tip burn (only in extreme heat)',
+                        solutions: [
+                            { title: 'Shade Cloth', desc: 'Use temporary shade cloth on younger tamarind' },
+                            { title: 'Morning Watering', desc: 'Deep-water in mornings to maintain midday hydration' },
+                            { title: 'Bark Mulch', desc: 'Use bark mulch around roots to retain afternoon moisture' }
+                        ]
+                    }
+                },
+                temperature: {
+                    low: {
+                        threshold: 15,
+                        symptoms: 'Temporary leaf drop',
+                        solutions: [
+                            { title: 'Burlap Wrap', desc: 'Wrap saplings with insulating burlap' },
+                            { title: 'Reduce Watering', desc: 'Reduce watering (tamarind roots absorb slowly in cold)' },
+                            { title: 'Frost Covers', desc: 'Use frost covers overnight' }
+                        ]
+                    },
+                    high: {
+                        threshold: 40,
+                        symptoms: 'Drooping leaves',
+                        solutions: [
+                            { title: 'Afternoon Shade', desc: 'Use shading panels in the afternoon' },
+                            { title: 'Morning Watering', desc: 'Deep-water in morning to retain moisture' },
+                            { title: 'Wood-chip Mulch', desc: 'Apply wood-chip mulch to reduce soil temperature during heatwaves' }
+                        ]
+                    }
+                }
+            },
+            'Pomegranate': {
+                humidity: {
+                    low: {
+                        threshold: 30,
+                        symptoms: 'Small fruits and stiff leaves',
+                        solutions: [
+                            { title: 'Weekly Watering', desc: 'Deep-water weekly to prevent fruit cracking' },
+                            { title: 'Bark Mulch', desc: 'Add bark mulch to retain moisture' },
+                            { title: 'Micro-misters', desc: 'Install micro-misters to maintain humidity' }
+                        ]
+                    },
+                    high: {
+                        threshold: 80,
+                        symptoms: 'Fruit rot and fungal blossom-end rot',
+                        solutions: [
+                            { title: 'Prune Branches', desc: 'Prune branches to prevent fungal growth' },
+                            { title: 'Copper Spray', desc: 'Use copper spray to prevent mold in humid weather' },
+                            { title: 'Sand Drainage', desc: 'Use coarse sand mixtures around roots to improve drainage' }
+                        ]
+                    }
+                },
+                ph: {
+                    low: {
+                        threshold: 5.5,
+                        symptoms: 'Premature flower drop',
+                        solutions: [
+                            { title: 'Calcitic Lime', desc: 'Gradually add calcitic lime to raise pH' },
+                            { title: 'Leaf-mold Compost', desc: 'Add leaf-mold compost to increase nutrient uptake' },
+                            { title: 'Reduce Sulfur', desc: 'Reduce usage of sulfur-based fertilizers' }
+                        ]
+                    },
+                    high: {
+                        threshold: 7.5,
+                        symptoms: 'Poor red color, yellowing leaves with green veins (chlorosis)',
+                        solutions: [
+                            { title: 'Elemental Sulfur', desc: 'Add elemental sulfur to lower pH' },
+                            { title: 'Peat-moss Mulch', desc: 'Use peat-moss mulch to maintain acidic conditions' },
+                            { title: 'Chelated Nutrients', desc: 'Apply chelated micronutrients via foliar spray' }
+                        ]
+                    }
+                },
+                light: {
+                    low: {
+                        threshold: 30000,
+                        symptoms: 'Pale, unsweet, tasteless fruit',
+                        solutions: [
+                            { title: 'Remove Shade', desc: 'Remove overhead shade to improve sunlight and sweetness' },
+                            { title: 'Thin Canopy', desc: 'Thin inner canopy to increase light exposure' },
+                            { title: 'Daily Sunlight', desc: 'Ensure 6-8 hours of direct sunlight' }
+                        ]
+                    },
+                    high: {
+                        threshold: 80000,
+                        symptoms: 'Fruit cracking from overheating',
+                        solutions: [
+                            { title: 'Shade Net', desc: 'Install 20% shade net to prevent fruit skin sunburn' },
+                            { title: 'Deep Watering', desc: 'Increase frequency of deep-watering' },
+                            { title: 'Kaolin Clay', desc: 'Use kaolin clay spray to reduce heat absorption by fruits' }
+                        ]
+                    }
+                },
+                temperature: {
+                    low: {
+                        threshold: 10,
+                        symptoms: 'Stem damage on younger plants',
+                        solutions: [
+                            { title: 'Frost Cloths', desc: 'Use frost cloths overnight on younger stems' },
+                            { title: 'Reduce Watering', desc: 'Reduce watering (roots don\'t absorb well in cold)' },
+                            { title: 'Bark Mulch', desc: 'Add thick bark mulch to insulate soil' }
+                        ]
+                    },
+                    high: {
+                        threshold: 40,
+                        symptoms: 'Fruit cracking',
+                        solutions: [
+                            { title: 'Afternoon Shade', desc: 'Use afternoon shading structures to reduce radiation' },
+                            { title: 'Morning Watering', desc: 'Deep-water in the mornings' },
+                            { title: 'Whitewash Branches', desc: 'Apply whitewash to branches to reduce heat absorption' }
+                        ]
+                    }
+                }
+            },
+            'Roses': {
+                humidity: {
+                    low: {
+                        threshold: 40,
+                        symptoms: 'Crispy petals, buds drying before opening',
+                        solutions: [
+                            { title: 'Morning Misting', desc: 'Lightly mist in mornings (avoid causing fungus)' },
+                            { title: 'Bark Mulch', desc: 'Add shredded bark mulch to retain root moisture' },
+                            { title: 'Increase Watering', desc: 'Increase watering frequency during dry periods' }
+                        ]
+                    },
+                    high: {
+                        threshold: 85,
+                        symptoms: 'Black spots (fungal infection), powdery mildew',
+                        solutions: [
+                            { title: 'Prune Stems', desc: 'Prune densely packed stems to avoid fungal infection' },
+                            { title: 'Avoid Overhead Water', desc: 'Avoid overhead watering (wet leaves cause fungus)' },
+                            { title: 'Sulfur Fungicide', desc: 'Use sulfur fungicide to prevent mildew in humid seasons' }
+                        ]
+                    }
+                },
+                ph: {
+                    low: {
+                        threshold: 6,
+                        symptoms: 'Weak stems, reduced flowering, burnt shoots',
+                        solutions: [
+                            { title: 'Dolomitic Lime', desc: 'Add dolomitic lime to gradually raise pH' },
+                            { title: 'Composted Bark', desc: 'Add composted bark to reduce soil acidity' },
+                            { title: 'Reduce Acidic Fertilizers', desc: 'Reduce usage of acidic fertilizers' }
+                        ]
+                    },
+                    high: {
+                        threshold: 7,
+                        symptoms: 'Pale flowers, chlorosis (yellow leaves with green veins)',
+                        solutions: [
+                            { title: 'Elemental Sulfur', desc: 'Add elemental sulfur to lower pH' },
+                            { title: 'Peat Mulch', desc: 'Use peat-based mulch to maintain acidic conditions' },
+                            { title: 'Chelated Iron', desc: 'Apply chelated iron via foliar spray to reduce chlorosis' }
+                        ]
+                    }
+                },
+                light: {
+                    low: {
+                        threshold: 15000,
+                        symptoms: 'Sparse blooming, long and weak stems',
+                        solutions: [
+                            { title: 'Daily Sunlight', desc: 'Ensure roses receive minimum 6 hours direct sunlight' },
+                            { title: 'Remove Shade', desc: 'Remove overhead shade from trees' },
+                            { title: 'Thin Vegetation', desc: 'Thin surrounding vegetation for maximum sunlight' }
+                        ]
+                    },
+                    high: {
+                        threshold: 75000,
+                        symptoms: 'Pale flowers, wilting, leaf scorch',
+                        solutions: [
+                            { title: 'Afternoon Shade', desc: 'Use shade nets in afternoon when sunlight is most intense' },
+                            { title: 'Morning Watering', desc: 'Thoroughly water every morning at plant base' },
+                            { title: 'Cooling Mist', desc: 'Mist to cool plants (ensure leaves dry by sunset)' }
+                        ]
+                    }
+                },
+                temperature: {
+                    low: {
+                        threshold: 5,
+                        symptoms: 'Wilting, premature bud drop',
+                        solutions: [
+                            { title: 'Straw Mulch', desc: 'Apply thick straw mulch or wood-chip mulch for insulation' },
+                            { title: 'Reduce Pruning', desc: 'Reduce pruning to avoid damaging shoots' },
+                            { title: 'Frost Cloth', desc: 'Cover plants with frost cloth during severe cold' }
+                        ]
+                    },
+                    high: {
+                        threshold: 35,
+                        symptoms: 'Leaf curling, pale leaves',
+                        solutions: [
+                            { title: 'Afternoon Shade', desc: 'Use shade nets during afternoons' },
+                            { title: 'Deep Watering', desc: 'Increase watering depth' },
+                            { title: 'Composted Bark', desc: 'Mulch with composted bark to stabilize soil temperature' }
+                        ]
+                    }
+                }
+            }
+        };
+
+        let zoneData = [];
+
+        function resetAll() {
+            // Clear zone container
+            document.getElementById('zonesContainer').innerHTML = '';
+            document.getElementById('zonesContainer').style.display = 'none';
+            
+            // Clear results
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('summaryStats').innerHTML = '';
+            document.getElementById('diagnosisResults').innerHTML = '';
+            
+            // Reset zone count
+            document.getElementById('numZones').value = '3';
+            
+            // Clear zone data
+            zoneData = [];
+        }
+
+        function downloadPDF() {
+            // Hide elements we don't want in the print
+            const setupSection = document.querySelector('.setup-section');
+            const analyzeBtn = document.querySelector('#zonesContainer button');
+            const downloadBtn = event.target;
+            
+            // Store original display values
+            const originalSetupDisplay = setupSection.style.display;
+            const originalBtnDisplay = downloadBtn.style.display;
+            const originalAnalyzeDisplay = analyzeBtn ? analyzeBtn.style.display : null;
+            
+            // Hide setup and buttons for print
+            setupSection.style.display = 'none';
+            downloadBtn.style.display = 'none';
+            if (analyzeBtn) analyzeBtn.style.display = 'none';
+            
+            // Trigger browser print dialog
+            window.print();
+            
+            // Restore after a short delay
+            setTimeout(() => {
+                setupSection.style.display = originalSetupDisplay;
+                downloadBtn.style.display = originalBtnDisplay;
+                if (analyzeBtn) analyzeBtn.style.display = originalAnalyzeDisplay;
+            }, 100);
+        }
+
+        function generateZones() {
+            const numZones = parseInt(document.getElementById('numZones').value);
+            if (!numZones || numZones < 1 || numZones > 20) {
+                alert('Please enter a valid number of zones (1-20)');
+                return;
+            }
+
+            const container = document.getElementById('zonesContainer');
+            container.innerHTML = '';
+            zoneData = [];
+
+            for (let i = 1; i <= numZones; i++) {
+                const zoneCard = document.createElement('div');
+                zoneCard.className = 'zone-card';
+                zoneCard.innerHTML = `
+                    <div class="zone-header">
+                        <h3 class="zone-title">
+                            <span id="plant-icon-${i}" style="font-size: 2rem; margin-right: 0.5rem; opacity: 0.3; transition: all 0.3s;">🌱</span>
+                            Zone ${i}
+                        </h3>
+                    </div>
+                    <div class="input-group">
+                        <label for="plant-${i}">Plant Type</label>
+                        <select id="plant-${i}" onchange="updatePlantIcon(${i})">
+                            <option value="">Select Plant</option>
+                            <option value="Mango">🥭 Mango</option>
+                            <option value="Palm Oil">🌴 Palm Oil</option>
+                            <option value="Orange">🍊 Orange (Citrus)</option>
+                            <option value="Tamarind">🌳 Tamarind</option>
+                            <option value="Pomegranate">🍎 Pomegranate</option>
+                            <option value="Roses">🌹 Roses</option>
+                        </select>
+                    </div>
+                    <div class="parameters-grid">
+                        <div class="input-group param-input">
+                            <label for="humidity-${i}">Humidity (%)</label>
+                            <input type="number" id="humidity-${i}" placeholder="e.g., 55" onblur="validateParameter(${i}, 'humidity')">
+                            <span class="param-status" id="humidity-status-${i}"></span>
+                        </div>
+                        <div class="input-group param-input">
+                            <label for="ph-${i}">pH</label>
+                            <input type="number" step="0.1" id="ph-${i}" placeholder="e.g., 6.5" onblur="validateParameter(${i}, 'ph')">
+                            <span class="param-status" id="ph-status-${i}"></span>
+                        </div>
+                        <div class="input-group param-input">
+                            <label for="light-${i}">Light (lux)</label>
+                            <input type="number" id="light-${i}" placeholder="e.g., 50000" onblur="validateParameter(${i}, 'light')">
+                            <span class="param-status" id="light-status-${i}"></span>
+                        </div>
+                        <div class="input-group param-input">
+                            <label for="temperature-${i}">Temperature (°C)</label>
+                            <input type="number" id="temperature-${i}" placeholder="e.g., 25" onblur="validateParameter(${i}, 'temperature')">
+                            <span class="param-status" id="temperature-status-${i}"></span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(zoneCard);
+            }
+
+            // Add analyze button OUTSIDE the zone cards as a separate element
+            const buttonDiv = document.createElement('div');
+            buttonDiv.style.marginTop = '2rem';
+            buttonDiv.innerHTML = '<button class="btn" onclick="analyzeZones()">Analyze All Zones</button>';
+            container.appendChild(buttonDiv);
+
+            container.style.display = 'block';
+        }
+
+        function validateParameter(zoneNum, param) {
+            const plantType = document.getElementById(`plant-${zoneNum}`).value;
+            if (!plantType) return;
+
+            const value = parseFloat(document.getElementById(`${param}-${zoneNum}`).value);
+            const statusSpan = document.getElementById(`${param}-status-${zoneNum}`);
+
+            if (isNaN(value)) {
+                statusSpan.textContent = '';
+                return;
+            }
+
+            const optimal = plantData[plantType][param];
+            if (value >= optimal.min && value <= optimal.max) {
+                statusSpan.textContent = '✓';
+                statusSpan.style.color = 'var(--optimal)';
+            } else if (value < optimal.min) {
+                statusSpan.textContent = '⚠';
+                statusSpan.style.color = 'var(--warning)';
+            } else {
+                statusSpan.textContent = '⚠';
+                statusSpan.style.color = 'var(--critical)';
+            }
+        }
+
+        function updatePlantIcon(zoneNum) {
+            const plantType = document.getElementById(`plant-${zoneNum}`).value;
+            const iconSpan = document.getElementById(`plant-icon-${zoneNum}`);
+            
+            if (plantType && plantData[plantType]) {
+                iconSpan.textContent = plantData[plantType].icon;
+                iconSpan.style.opacity = '1';
+            } else {
+                iconSpan.textContent = '🌱';
+                iconSpan.style.opacity = '0.3';
+            }
+        }
+
+        function analyzeZones() {
+            // Count actual zone cards (excluding the button)
+            const zoneCards = document.querySelectorAll('.zone-card');
+            const numZones = zoneCards.length;
+            
+            console.log('Number of zone cards found:', numZones);
+            
+            if (numZones === 0) {
+                alert('No zones found. Please generate zones first.');
+                return;
+            }
+            
+            const results = [];
+
+            for (let i = 1; i <= numZones; i++) {
+                const plantType = document.getElementById(`plant-${i}`).value;
+                if (!plantType) {
+                    alert(`Please select a plant type for Zone ${i}`);
+                    return;
+                }
+
+                const humidity = parseFloat(document.getElementById(`humidity-${i}`).value);
+                const ph = parseFloat(document.getElementById(`ph-${i}`).value);
+                const light = parseFloat(document.getElementById(`light-${i}`).value);
+                const temperature = parseFloat(document.getElementById(`temperature-${i}`).value);
+
+                if (isNaN(humidity) || isNaN(ph) || isNaN(light) || isNaN(temperature)) {
+                    alert(`Please fill all parameters for Zone ${i}`);
+                    return;
+                }
+
+                console.log(`Zone ${i} data:`, { plantType, humidity, ph, light, temperature });
+
+                const diagnosis = diagnoseZone(i, plantType, { humidity, ph, light, temperature });
+                console.log(`Zone ${i} diagnosis:`, diagnosis);
+                results.push(diagnosis);
+            }
+
+            console.log('All results before display:', results);
+            displayResults(results);
+        }
+
+        function diagnoseZone(zoneNum, plantType, values) {
+            const optimal = plantData[plantType];
+            const issues = [];
+            const solutions = [];
+
+            // Check each parameter
+            ['humidity', 'ph', 'light', 'temperature'].forEach(param => {
+                const value = values[param];
+                const range = optimal[param];
+                const symptoms = symptomsAndSolutions[plantType][param];
+
+                if (value < range.min) {
+                    // Too low
+                    const severity = symptoms.low && value < symptoms.low.threshold ? 'critical' : 'warning';
+                    issues.push({
+                        parameter: param.charAt(0).toUpperCase() + param.slice(1),
+                        severity: severity,
+                        status: 'Too Low',
+                        current: value + range.unit,
+                        optimal: `${range.min}-${range.max}${range.unit}`,
+                        symptoms: symptoms.low ? symptoms.low.symptoms : 'Below optimal range',
+                        solutions: symptoms.low ? symptoms.low.solutions : []
+                    });
+                    if (symptoms.low && symptoms.low.solutions) {
+                        solutions.push(...symptoms.low.solutions.map(s => ({ ...s, param })));
+                    }
+                } else if (value > range.max) {
+                    // Too high
+                    const severity = symptoms.high && value > symptoms.high.threshold ? 'critical' : 'warning';
+                    issues.push({
+                        parameter: param.charAt(0).toUpperCase() + param.slice(1),
+                        severity: severity,
+                        status: 'Too High',
+                        current: value + range.unit,
+                        optimal: `${range.min}-${range.max}${range.unit}`,
+                        symptoms: symptoms.high ? symptoms.high.symptoms : 'Above optimal range',
+                        solutions: symptoms.high ? symptoms.high.solutions : []
+                    });
+                    if (symptoms.high && symptoms.high.solutions) {
+                        solutions.push(...symptoms.high.solutions.map(s => ({ ...s, param })));
+                    }
+                }
+            });
+
+            return {
+                zoneNum,
+                plantType,
+                issues,
+                solutions,
+                issueCount: issues.length,
+                criticalCount: issues.filter(i => i.severity === 'critical').length
+            };
+        }
+
+        function displayResults(results) {
+            // IMPORTANT: Work with the original results array
+            console.log('Results received:', results);
+            console.log('Number of results:', results.length);
+            
+            // Calculate summary stats FIRST - FIXED
+            const totalZones = results.length;
+            const zonesWithIssues = results.filter(r => r.issueCount > 0).length;
+            const totalIssues = results.reduce((sum, r) => sum + r.issueCount, 0);
+            const criticalIssues = results.reduce((sum, r) => sum + r.criticalCount, 0);
+
+            console.log('Calculated stats:', { totalZones, zonesWithIssues, totalIssues, criticalIssues });
+
+            // Display summary
+            const summaryHTML = `
+                <div class="stat-card">
+                    <span class="stat-value">${totalZones}</span>
+                    <span class="stat-label">Total Zones</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">${zonesWithIssues}</span>
+                    <span class="stat-label">Zones with Issues</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">${totalIssues}</span>
+                    <span class="stat-label">Total Issues</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" style="color: var(--critical)">${criticalIssues}</span>
+                    <span class="stat-label">Critical Issues</span>
+                </div>
+            `;
+            document.getElementById('summaryStats').innerHTML = summaryHTML;
+
+            // Sort zones by priority for display (but don't modify original array)
+            const sortedResults = [...results].sort((a, b) => {
+                if (a.criticalCount !== b.criticalCount) {
+                    return b.criticalCount - a.criticalCount;
+                }
+                return b.issueCount - a.issueCount;
+            });
+
+            // Display ALL zone diagnoses (sorted by priority but showing all)
+            let diagnosisHTML = '';
+            sortedResults.forEach(result => {
+                console.log('Processing zone:', result.zoneNum, 'Issues:', result.issueCount);
+                
+                const priorityClass = result.criticalCount > 0 ? 'critical' : 
+                                     result.issueCount >= 3 ? 'critical' :
+                                     result.issueCount >= 2 ? 'warning' : 
+                                     result.issueCount >= 1 ? 'warning' : 'optimal';
+
+                const priorityLabel = result.criticalCount > 0 ? 'Critical' : 
+                                     result.issueCount >= 3 ? 'High' :
+                                     result.issueCount >= 2 ? 'Medium' : 
+                                     result.issueCount >= 1 ? 'Low' : 'Optimal';
+
+                const priorityBadgeClass = result.criticalCount > 0 ? 'priority-critical' : 
+                                          result.issueCount >= 3 ? 'priority-high' :
+                                          result.issueCount >= 2 ? 'priority-medium' : 
+                                          result.issueCount >= 1 ? 'priority-low' : 'priority-low';
+
+                diagnosisHTML += `
+                    <div class="diagnosis-section">
+                        <div class="zone-header">
+                            <h3 class="diagnosis-header">
+                                ${plantData[result.plantType].icon} Zone ${result.zoneNum} - ${result.plantType}
+                            </h3>
+                            <span class="priority-badge ${priorityBadgeClass}">
+                                Priority: ${priorityLabel}
+                            </span>
+                        </div>
+                `;
+
+                if (result.issues.length === 0) {
+                    // Zone has NO issues
+                    diagnosisHTML += `
+                        <div class="no-issues">
+                            All parameters are optimal! No action needed.
+                        </div>
+                    `;
+                } else {
+                    // Zone HAS issues - list them
+                    diagnosisHTML += '<ul class="issue-list">';
+                    result.issues.forEach(issue => {
+                        const issueClass = issue.severity === 'critical' ? 'issue-critical' : 'issue-warning';
+                        const icon = issue.severity === 'critical' ? '🔴' : '⚠️';
+                        diagnosisHTML += `
+                            <li class="issue-item ${issueClass}">
+                                <span class="issue-icon">${icon}</span>
+                                <div>
+                                    <strong>${issue.parameter}</strong>: ${issue.status} 
+                                    (Current: ${issue.current}, Optimal: ${issue.optimal})
+                                    <br>
+                                    <em>Symptoms: ${issue.symptoms}</em>
+                                </div>
+                            </li>
+                        `;
+                    });
+                    diagnosisHTML += '</ul>';
+
+                    // Organize solutions by parameter
+                    const solutionsByParam = {};
+                    result.solutions.forEach(solution => {
+                        if (!solutionsByParam[solution.param]) {
+                            solutionsByParam[solution.param] = [];
+                        }
+                        solutionsByParam[solution.param].push(solution);
+                    });
+
+                    // Display solutions organized by parameter
+                    diagnosisHTML += `
+                        <div class="solutions-section">
+                            <div class="solutions-header">💡 Recommended Solutions</div>
+                    `;
+                    
+                    Object.keys(solutionsByParam).forEach(param => {
+                        const paramName = param.charAt(0).toUpperCase() + param.slice(1);
+                        diagnosisHTML += `
+                            <div style="margin-bottom: 1.5rem;">
+                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    ${paramName} Solutions:
+                                </div>
+                        `;
+                        solutionsByParam[param].forEach((solution, idx) => {
+                            diagnosisHTML += `
+                                <div class="solution-item">
+                                    <div class="solution-title">${idx + 1}. ${solution.title}</div>
+                                    <div class="solution-description">${solution.desc}</div>
+                                </div>
+                            `;
+                        });
+                        diagnosisHTML += '</div>';
+                    });
+                    
+                    diagnosisHTML += '</div>';
+                }
+
+                diagnosisHTML += '</div>';
+            });
+
+            document.getElementById('diagnosisResults').innerHTML = diagnosisHTML;
+            document.getElementById('resultsSection').style.display = 'block';
+
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
